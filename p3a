@@ -1,0 +1,63 @@
+// Process control system calls: The demonstration of FORK, EXECVE and WAIT system calls along with zombie
+// and orphan states.
+// a. Implement the C program in which main program accepts the integers to be sorted. Main program uses the FORK system call
+// to create a new process called a child process. Parent process sorts the integers using sorting algorithm and waits for child
+// process using WAIT system call tosort the integers using any sorting algorithm. Also demonstrate zombie and orphan states.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+// Function to sort an array of integers using Bubble Sort algorithm
+void bubbleSort(int arr[], int n) {
+    int temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter the number of integers: ");
+    scanf("%d", &n);
+
+    int *arr = (int *)malloc(n * sizeof(int));
+    printf("Enter %d integers: ", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // Child process
+        printf("Child process id: %d\n", getpid());
+        // Child process does nothing but exit immediately
+        exit(EXIT_SUCCESS);
+    } else { // Parent process
+        printf("Parent process id: %d\n", getpid());
+        printf("Sorting array...\n");
+        bubbleSort(arr, n);
+        printf("Sorted array: ");
+        for (int i = 0; i < n; i++) {
+            printf("%d ", arr[i]);
+        }
+        printf("\n");
+        wait(NULL); // Waiting for the child process to exit
+        printf("Child process has exited.\n");
+    }
+
+    free(arr);
+    return 0;
+}
